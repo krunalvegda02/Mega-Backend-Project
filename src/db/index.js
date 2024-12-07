@@ -11,7 +11,7 @@ const connectDB = async () => {
       console.log("Express Error:", error);
     });
 
-    console.log(`\n MOngoDB connected !! DB HOST: ${connectionInstance}`);
+    console.log(`\n MOngoDB connected !! DB HOST: ${connectionInstance.connection.host}`);
   } catch (error) {
     console.log("Database connectivity error:", error);
     process.exit(1);
