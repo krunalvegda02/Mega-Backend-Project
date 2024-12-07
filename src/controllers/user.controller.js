@@ -11,6 +11,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
     const refreshToken = user.generateRefreshToken();
 
     user.refreshToken = refreshToken;
+    console.log("refreshToken",refreshToken)
     await user.save({ validateBeforeSave: false }); //savind refreshtoken into database
 
     return { accessToken, refreshToken };
@@ -154,7 +155,7 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
-const logOutUser = asyncHandler(async () => {
+const logOutUser = asyncHandler(async (req, res) => {
   User.findByIdAndUpdate(
     req.user._id,
     {
