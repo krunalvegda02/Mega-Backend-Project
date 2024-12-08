@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { loginUser, logOutUser, refreshAccessToken, registerUser } from "../controllers/user.controller.js";
+import { changeCurrentPassword, loginUser, logOutUser, refreshAccessToken, registerUser } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
-const router = Router();
+const userRouter = Router();
 
-router.route("/register").post(
+userRouter.route("/register").post(
   upload.fields([
     {
       name: "avatar",
@@ -19,11 +19,13 @@ router.route("/register").post(
   registerUser
 );
 
-router.route("/login").post(loginUser);
+userRouter.route("/login").post(loginUser);
 
 // Secured Routes
-router.route("/logout").post(verifyJWT ,logOutUser);
+userRouter.route("/logout").post(verifyJWT ,logOutUser);
 
-router.route("/refresh_token").post(refreshAccessToken);
+userRouter.route("/refresh_token").post(refreshAccessToken);
 
-export default router;
+userRouter.route("/password-change").post(verifyJWT , changeCurrentPassword);
+
+export default userRouter;
