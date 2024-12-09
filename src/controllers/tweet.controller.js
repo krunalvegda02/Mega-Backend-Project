@@ -1,28 +1,29 @@
-import mongoose, {isValidObjectId} from "mongoose"
+import mongoose, { isValidObjectId } from "mongoose"
+import {Tweet} from "../models/tweet.model.js"
 import {User} from "../models/user.model.js"
-import { Subscription } from "../models/subscription.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 
-
-const toggleSubscription = asyncHandler(async (req, res) => {
-    const {channelId} = req.params
-    // TODO: toggle subscription
+const createTweet = asyncHandler(async (req, res) => {
+    //TODO: create tweet
 })
 
-// controller to return subscriber list of a channel
-const getUserChannelSubscribers = asyncHandler(async (req, res) => {
-    const {channelId} = req.params
+const getUserTweets = asyncHandler(async (req, res) => {
+    // TODO: get user tweets
 })
 
-// controller to return channel list to which user has subscribed
-const getSubscribedChannels = asyncHandler(async (req, res) => {
-    const { subscriberId } = req.params
+const updateTweet = asyncHandler(async (req, res) => {
+    //TODO: update tweet
+})
+
+const deleteTweet = asyncHandler(async (req, res) => {
+    //TODO: delete tweet
 })
 
 export {
-    toggleSubscription,
-    getUserChannelSubscribers,
-    getSubscribedChannels
+    createTweet,
+    getUserTweets,
+    updateTweet,
+    deleteTweet
 }
