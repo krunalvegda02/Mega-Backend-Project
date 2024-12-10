@@ -47,7 +47,6 @@ const getVideoComments = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const { page = 1, limit = 10 } = req.query;
 
-  // Ensure videoId is valid
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid video ID");
   }
@@ -66,9 +65,9 @@ const getVideoComments = asyncHandler(async (req, res) => {
     { $unwind: "$ownerDetails" }, // Flatten the owner details
     {
       $project: {
-        content: 1, // Include comment content
-        "ownerDetails.username": 1, // Include the owner's username
-        "ownerDetails.avatar": 1, // Include the owner's avatar (if available)
+        content: 1,
+        "ownerDetails.username": 1,
+        "ownerDetails.avatar": 1,
       },
     },
   ])
@@ -93,6 +92,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
 const addComment = asyncHandler(async (req, res) => {
   const { comment } = req.body;
+  const { videoId } = req.params;
 
   if (!comment || comment.trim().length === 0) {
     throw new ApiError(400, "Please type anything to add a comment");
@@ -100,18 +100,47 @@ const addComment = asyncHandler(async (req, res) => {
 
   const newComment = await Comment.create({
     content: comment,
-    owner : req.user._id,
-    //TODO: add video reference
-    video: req.multer
-  })
+    owner: req.user._id,
+    video: videoId,
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, newComment, "Comment added successfully"));
 });
 
 const updateComment = asyncHandler(async (req, res) => {
-  // TODO: update a comment
+  const { newComment } = req.body;
+  const { commentId } = req.params;
+
+  const updatedComment = await Comment.findByIdAndUpdate(
+    commentId,
+    {
+      $set: { content: newComment },
+    },
+    { new: true }
+  );
+
+  if (!updatedComment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, updatedComment, "Comment updated successfully"));
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
-  // TODO: delete a comment
+  const { commentId } = req.params;
+
+  const deletedComment = await Comment.findByIdAndDelete(commentId);
+  if (!deletedComment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, deletedComment, "Comment updated successfully"));
 });
 
 export { getVideoComments, addComment, updateComment, deleteComment };
