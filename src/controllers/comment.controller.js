@@ -1,31 +1,117 @@
-import mongoose from "mongoose"
-import {Comment} from "../models/comment.model.js"
-import {ApiError} from "../utils/ApiError.js"
-import {ApiResponse} from "../utils/ApiResponse.js"
-import {asyncHandler} from "../utils/asyncHandler.js"
+import mongoose from "mongoose";
+import { Video } from "../models/video.model.js";
+import { Comment } from "../models/comment.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+
+// const getVideoComments = asyncHandler(async (req, res) => {
+//   //TODO: get all comments for a video
+//   const { videoId } = req.params;
+//   const { page = 1, limit = 10 } = req.query;
+
+//   if (!mongoose.isValidObjectId(videoId)) {
+//     throw new ApiError(400, "Invalid video ID");
+//   }
+
+//   const comments = await Comment.aggregate([
+//     { $match: { video: mongoose.Types.ObjectId(videoId) } },
+//     {
+//       $lookup: {
+//         from: "users", // Join with the User collection
+//         localField: "owner",
+//         foreignField: "_id",
+//         as: "ownerDetails",
+//       },
+//     },
+//     { $unwind: "$ownerDetails" }, // Flatten the owner details
+//     {
+//       $project: {
+//         content: 1, // Include comment content
+//         "ownerDetails.username": 1, // Include the owner's username
+//         "ownerDetails.avatar": 1, // Include the owner's avatar (if available)
+//       },
+//     },
+//   ])
+//     .skip((page - 1) * limit) // Skip for pagination
+//     .limit(parseInt(limit)); // Limit results per page
+
+//   return res
+//     .status(200)
+//     .json(
+//       ApiResponse(200, comments, "All Video comments fetched succefully")
+//     );
+// });
 
 const getVideoComments = asyncHandler(async (req, res) => {
-    //TODO: get all comments for a video
-    const {videoId} = req.params
-    const {page = 1, limit = 10} = req.query
+  const { videoId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
 
-})
+  // Ensure videoId is valid
+  if (!mongoose.isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video ID");
+  }
+
+  // Paginate and fetch comments for the video
+  const comments = await Comment.aggregate([
+    { $match: { video: mongoose.Types.ObjectId(videoId) } },
+    {
+      $lookup: {
+        from: "users", // Join with the User collection
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+      },
+    },
+    { $unwind: "$ownerDetails" }, // Flatten the owner details
+    {
+      $project: {
+        content: 1, // Include comment content
+        "ownerDetails.username": 1, // Include the owner's username
+        "ownerDetails.avatar": 1, // Include the owner's avatar (if available)
+      },
+    },
+  ])
+    .skip((page - 1) * limit) // Skip for pagination
+    .limit(parseInt(limit)); // Limit results per page
+
+  const totalComments = await Comment.countDocuments({ video: videoId });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        comments,
+        total: totalComments,
+        page: parseInt(page),
+        limit: parseInt(limit),
+      },
+      "All video comments fetched successfully"
+    )
+  );
+});
 
 const addComment = asyncHandler(async (req, res) => {
-    // TODO: add a comment to a video
-})
+  const { comment } = req.body;
+
+  if (!comment || comment.trim().length === 0) {
+    throw new ApiError(400, "Please type anything to add a comment");
+  }
+
+  const newComment = await Comment.create({
+    content: comment,
+    owner : req.user._id,
+    //TODO: add video reference
+    video: req.multer
+  })
+});
 
 const updateComment = asyncHandler(async (req, res) => {
-    // TODO: update a comment
-})
+  // TODO: update a comment
+});
 
 const deleteComment = asyncHandler(async (req, res) => {
-    // TODO: delete a comment
-})
+  // TODO: delete a comment
+});
 
-export {
-    getVideoComments, 
-    addComment, 
-    updateComment,
-     deleteComment
-    }
+export { getVideoComments, addComment, updateComment, deleteComment };
