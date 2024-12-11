@@ -5,6 +5,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { extractPublicIdFromUrl } from "../utils/cloudinary.js";
+import cloudinary from "cloudinary";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -13,13 +15,13 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
+  const videoLocalFile = req.files?.videoFile[0]?.path;
+  const thumbnailLocalFile = req.files?.thumbnail[0]?.path;
 
   if (!title && !description) {
     throw new ApiError(404, "Please provide details of the video");
   }
 
-  const videoLocalFile = req.files?.videoFile[0]?.path;
-  const thumbnailLocalFile = req.files?.thumbnail[0]?.path;
   if (!videoLocalFile && !thumbnailLocalFile) {
     throw new ApiError(404, "Video not found");
   }
@@ -30,13 +32,13 @@ const publishAVideo = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Video not uploadede on cloudinary");
   }
 
-//   console.log("video duration:", videoFile);
+  console.log("video duration:", videoFile);
 
   const publishVideo = await Video.create({
     title,
     description,
-    thumbnail: thumbnailLocalFile,
-    video: videoLocalFile,
+    thumbnail: thumbnail.url,
+    video: videoFile.url,
     owner: req.user._id,
     isPublished: true,
     duration: videoFile.duration,
@@ -70,22 +72,49 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  const { title, thumbnail, description } = req.body;
+  const { title, description } = req.body;
+  const thumbnail = req.file.path;
+
+  console.log("thumbnial", thumbnail.path);
 
   if (!videoId) {
     throw new ApiError(404, "video not found");
   }
 
-  const updatedVideo = await Video.findByIdAndUpdate(videoId, {
-    $set: {
-      title,
-      thumbnail,
-      description,
-    },
-  });
-  if (!updatedVideo) {
+  const video = await Video.findById(videoId);
+  if (!video) {
     throw new ApiError(400, "Unable to update video");
   }
+
+  //   console.log("video.thumbnail", video.thumbnail);
+
+  let newThumbnailUrl = null;
+  // Deleting old thumbnail if a new one is provided
+  if (thumbnail && video.thumbnail) {
+    const oldThumbnail = await extractPublicIdFromUrl(video.thumbnail);
+    // console.log(" old thumbnail", oldThumbnail);
+
+    try {
+      const deletion = await cloudinary.uploader.destroy(oldThumbnail);
+      console.log("Thumbnail deletion:", deletion);
+      const newThumbnail = await uploadOnCloudinary(thumbnail);
+      newThumbnailUrl = newThumbnail.url;
+    } catch (error) {
+      console.error("Failed to delete old thumbnail:", error);
+    }
+  }
+
+  if (title) {
+    video.title = title;
+  }
+  if (description) {
+    video.description = description;
+  }
+  if (newThumbnailUrl) {
+    video.thumbnail = newThumbnailUrl;
+  }
+
+  const updatedVideo = await video.save({ validateBeforeSave: false });
 
   return res
     .status(200)
@@ -93,24 +122,23 @@ const updateVideo = asyncHandler(async (req, res) => {
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
-  const { videoId } = req.params;
-  if (!videoId) {
-    throw new ApiError(404, "video not found");
-  }
-
-  const deletedVideo = await Video.findByIdAndDelete(videoId);
-  if (!deletedVideo) {
-    throw new ApiError(400, "Unable to delete video");
-  }
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, deletedVideo, "Video deleted successfully"));
+    const { videoId } = req.params;
+    if (!videoId) {
+      throw new ApiError(404, "video not found");
+    }
+  
 });
+  
+
+  
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 });
+
+  
+  
+
 
 export {
   getAllVideos,

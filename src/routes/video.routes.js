@@ -16,7 +16,6 @@ router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
 router
     .route("/")
     .get(getAllVideos)  // get all videos for home screen
-  
     .post(              // publish a video
         upload.fields([
             {

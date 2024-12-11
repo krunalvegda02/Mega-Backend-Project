@@ -39,4 +39,6 @@ const extractPublicIdFromUrl = (url) => {
   return publicId;
 };
 
+
+
 export { uploadOnCloudinary, extractPublicIdFromUrl };
