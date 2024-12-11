@@ -10,3 +10,10 @@ const storage = multer.diskStorage({
 });
 
 export const upload = multer({ storage });
+
+
+/* 
+ just handles the file upload process in express app,
+
+ saving file locally temporarily before uploading on cloudinary
+*/

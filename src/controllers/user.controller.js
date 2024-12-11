@@ -49,7 +49,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //cheek for imagis and avatar
   const avatarLocalPath = req.files?.avatar[0]?.path;
 
-  //   const coverImageLocalPath = req.files?.coverImage[0]?.path;          //if avatar image is null then it shows undifined error
+  //const coverImageLocalPath = req.files?.coverImage[0]?.path;          //if avatar image is null then it shows undifined error
   let coverImageLocalPath;
   if (
     req.files &&
@@ -63,6 +63,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Avatar Image is must required");
   }
   console.log("Avatar:", req.files);
+
   //upload to cloudinary, check avatar
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
@@ -79,7 +80,6 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
   });
 
-  // remove pasword andd refresh token field from response
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
@@ -91,7 +91,6 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "error while regostering user");
   }
 
-  //return result
   return res
     .status(200)
     .json(new ApiResponse(200, createdUser, "Isr registered succesfully"));

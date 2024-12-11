@@ -15,8 +15,9 @@ router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
 
 router
     .route("/")
-    .get(getAllVideos)
-    .post(
+    .get(getAllVideos)  // get all videos for home screen
+  
+    .post(              // publish a video
         upload.fields([
             {
                 name: "videoFile",
@@ -33,9 +34,9 @@ router
 
 router
     .route("/:videoId")
-    .get(getVideoById)
+    .get(getVideoById)         // get video for particular clicking on particular video
     .delete(deleteVideo)
-    .patch(upload.single("thumbnail"), updateVideo);
+    .patch(upload.single("thumbnail"), updateVideo);   //we can not update video just title and thumbnail can be updated
 
 router.route("/toggle/publish/:videoId").patch(togglePublishStatus);
 
