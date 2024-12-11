@@ -15,15 +15,14 @@ const getAllVideos = asyncHandler(async (req, res) => {
     sortType = "desc",
     userId,
   } = req.query;
-  //TODO: get all videos based on query, sort, pagination
-
+  
   // Pagination settings
   const pageNumber = parseInt(page);
   const limitNumber = parseInt(limit);
   const skip = (pageNumber - 1) * limitNumber;
 
   // Building the query
-  const filters = {};
+  const filters = { isPublished: true };
   if (query) {
     filters.$or = [
       { title: { $regex: query, $options: "i" } }, // Case-insensitive search in title
@@ -38,7 +37,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
   const sortOptions = { [sortBy]: sortType === "asc" ? 1 : -1 };
 
   // Fetching videos
-  const totalVideos = await Video.countDocuments(filters); // Total number of matching videos
+  const totalVideos = await Video.countDocuments(filters);
+  // Total number of matching videos
   const videos = await Video.find(filters)
     .sort(sortOptions)
     .skip(skip)

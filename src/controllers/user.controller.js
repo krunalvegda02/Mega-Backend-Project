@@ -100,10 +100,13 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   //req body -> data    //username or email
+
+  console.log("req.body", req.body)
   const { email, username, password } = req.body;
+  
 
   if (!username && !email) {
-    throw new ApiError(400, "username or password is must required");
+    throw new ApiError(400, "username must required");
   }
 
   //find the user
