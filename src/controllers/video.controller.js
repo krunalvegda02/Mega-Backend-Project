@@ -6,7 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { extractPublicIdFromUrl } from "../utils/cloudinary.js";
-import cloudinary from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -122,23 +122,51 @@ const updateVideo = asyncHandler(async (req, res) => {
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
-    const { videoId } = req.params;
-    if (!videoId) {
-      throw new ApiError(404, "video not found");
-    }
-  
-});
-  
+  const { videoId } = req.params;
+  if (!videoId) {
+    throw new ApiError(404, "video not found");
+  }
 
-  
+  // Find the video in the database
+  const videoDetails = await Video.findById(videoId);
+  if (!videoDetails) {
+    throw new ApiError(404, "Video not found");
+  }
+
+  // Extract the public IDs from the video URL and thumbnail URL
+  const CloudinaryVideoId = extractPublicIdFromUrl(videoDetails.video);
+  const CloudinaryThumbnailId = extractPublicIdFromUrl(videoDetails.thumbnail);
+
+  console.log("Cloudinary Video ID:", CloudinaryVideoId); // Log the video public ID
+  console.log("Cloudinary Thumbnail ID:", CloudinaryThumbnailId); // Log the thumbnail public ID
+
+  // Deleting the video from Cloudinary
+  const videoDeletion = await cloudinary.uploader.destroy(CloudinaryVideoId, {
+    resource_type: "video",
+  });
+  console.log("Video Deletion Result:", videoDeletion);
+
+  // Deleting the thumbnail from Cloudinary
+  const thumbnailDeletion = await cloudinary.uploader.destroy(
+    CloudinaryThumbnailId
+  );
+  console.log("Thumbnail Deletion Result:", thumbnailDeletion);
+
+  //Delete the video record from the database
+  const deletedVideo = await Video.findByIdAndDelete(videoId);
+  if (!deletedVideo) {
+    throw new ApiError(400, "Unable to delete video from the database");
+  }
+
+  // Respond with success
+  return res
+    .status(200)
+    .json(new ApiResponse(200, deletedVideo, "User deleted Successfully"));
+});
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 });
-
-  
-  
-
 
 export {
   getAllVideos,
