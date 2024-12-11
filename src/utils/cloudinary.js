@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";               //Node File System
+import fs from "fs"; //Node File System
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -17,7 +17,7 @@ const uploadOnCloudinary = async (localFilePath) => {
     });
 
     console.log("FIle is Uploaded on Cloudinary:", uploadResult.url);
-    console.log("UPLOAD CLOUDINARY RESULT", uploadResult);
+    // console.log("UPLOAD CLOUDINARY RESULT", uploadResult);
 
     fs.unlinkSync(localFilePath);
 
@@ -29,4 +29,14 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export { uploadOnCloudinary };
+//For deleting old file ---> this is long method..we have to call destroy method for deletingfile
+const extractPublicIdFromUrl = (url) => {
+  const parts = url.split("/");
+  const publicIdWithExtension = parts[parts.length - 1];
+  const publicId = publicIdWithExtension.split(".")[0];
+  console.log("publicId", publicId);
+
+  return publicId;
+};
+
+export { uploadOnCloudinary, extractPublicIdFromUrl };
