@@ -28,11 +28,11 @@ const videoSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    views: {
-      type: String,
-      required: true,
-      default: 0,
-    },
+    views: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: [],
+    }],
     isPublished: {
       type: Boolean,
       required: true,

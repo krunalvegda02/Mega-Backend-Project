@@ -28,7 +28,6 @@ const generateAccessAndRefreshTokens = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-  //get use details from frontend
   const { fullname, username, email, password } = req.body;
   //   console.log("emila:", email, "\n password: ", password);
 
@@ -100,11 +99,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   //req body -> data    //username or email
-
-  console.log("req.body", req.body)
   const { email, username, password } = req.body;
   
-
   if (!username && !email) {
     throw new ApiError(400, "username must required");
   }
@@ -117,9 +113,6 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User Not Found");
   }
-
-  //password check
-  //   console.log("isPasswordCorrect",isPasswordCorrect);
 
   const isPasswordCorrect = await user.isPasswordCorrect(password);
 
@@ -248,7 +241,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse((200, {}, "Password updated successfylly")));
+    .json(new ApiResponse((200, newPassword, "Password updated successfylly")));
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {

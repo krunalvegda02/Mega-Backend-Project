@@ -34,37 +34,52 @@ const toggleSubscription = asyncHandler(async (req, res) => {
   }
 });
 
-// controller to return subscriber list of a channel
+// controller to return subscriber list of a channel     //!Follower List
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
-    const { subscriberId } = req.params;
-  
-    // Find all subscriptions where the subscriber matches the subscriberId
-    const subscriptions = await Subscription.find({ subscriber: subscriberId }).populate("channel", "name email");
-  
-    if (!subscriptions || subscriptions.length === 0) {
-      return res.status(404).json(new ApiResponse(404, [], "No subscribed channels found"));
-    }
-  
-    // Return all the channels to which this user is subscribed
-    const channels = subscriptions.map(sub => sub.channel);
-    return res.status(200).json(new ApiResponse(200, channels, "Subscribed channels fetched successfully"));
-  });
-  
-// controller to return channel list to which user has subscribed
+  const { subscriberId } = req.params;
+
+  // Find all subscriptions where the subscriber matches the subscriberId
+  const subscriptions = await Subscription.find({         //! subscription = we follow anyone
+    subscriber: subscriberId, 
+  }).populate("channel", "name email");
+
+  if (!subscriptions || subscriptions.length === 0) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, [], "No subscribed channels found"));
+  }
+
+  // Return all the channels to which this user is subscribed
+  const channels = subscriptions.map((sub) => sub.channel);
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channels, "Subscribed channels fetched successfully")
+    );
+});
+
+// controller to return channel list to which user has subscribed        //!Following List
 const getSubscribedChannels = asyncHandler(async (req, res) => {
-    const { channelId } = req.params;
-  
-    // Find all subscriptions where the channel matches the channelId
-    const subscriptions = await Subscription.find({ channel: channelId }).populate("subscriber", "name email");
-  
-    if (!subscriptions || subscriptions.length === 0) {
-      return res.status(404).json(new ApiResponse(404, [], "No subscribers found for this channel"));
-    }
-  
-    // Return all the subscribers
-    const subscribers = subscriptions.map(sub => sub.subscriber);
-    return res.status(200).json(new ApiResponse(200, subscribers, "Subscribers fetched successfully"));
-  });
-  
+  const { channelId } = req.params;
+
+  // Find all subscriptions where the channel matches the channelId
+  const subscriptions = await Subscription.find({
+    channel: channelId,
+  }).populate("subscriber", "name email");
+
+  if (!subscriptions || subscriptions.length === 0) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, [], "No subscribers found for this channel"));
+  }
+
+  // Return all the subscribers
+  const subscribers = subscriptions.map((sub) => sub.subscriber);
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, subscribers, "Subscribers fetched successfully")
+    );
+});
 
 export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };

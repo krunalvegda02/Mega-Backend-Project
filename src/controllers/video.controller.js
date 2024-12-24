@@ -15,7 +15,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     sortType = "desc",
     userId,
   } = req.query;
-  
+
   // Pagination settings
   const pageNumber = parseInt(page);
   const limitNumber = parseInt(limit);
@@ -61,6 +61,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
+  console.log(req.files);
+
   const videoLocalFile = req.files?.videoFile[0]?.path;
   const thumbnailLocalFile = req.files?.thumbnail[0]?.path;
 
@@ -88,7 +90,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
     owner: req.user._id,
     isPublished: true,
     duration: videoFile.duration,
-    views: 0,
   });
 
   if (!publishVideo) {
@@ -98,6 +99,23 @@ const publishAVideo = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, publishVideo, "Video Published Succesfully"));
+});
+
+const getMyVideos = asyncHandler(async (req, res) => {
+  const userid = req.user._id;
+console.log(userid);
+
+  const myVideos = await Video.find({ owner : userid  });
+  console.log(myVideos);
+  if (!myVideos) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "User Does Not Publish any Video"));
+  }
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200,myVideos, "My Video Fetched Succesfully"));
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
@@ -111,9 +129,24 @@ const getVideoById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Video not found");
   }
 
+  const hasViewed = userId && video.views.includes(userId);
+  if (!hasViewed && userId) {
+    video.views.push(userId); // Add user ID to the views array
+    await video.save(); // Save changes to the database
+  }
+
+  // Total views = number of unique users who watched the video
+  const totalViews = video.views.length;
+
   return res
     .status(200)
-    .json(new ApiResponse(200, video, "Video Fetched succesfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { ...video.toObject(), totalViews },
+        "Video Fetched succesfully"
+      )
+    );
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
@@ -235,4 +268,5 @@ export {
   updateVideo,
   deleteVideo,
   togglePublishStatus,
+  getMyVideos
 };
