@@ -100,7 +100,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   //req body -> data    //username or email
   const { email, username, password } = req.body;
-  
+
   if (!username && !email) {
     throw new ApiError(400, "username must required");
   }
@@ -409,9 +409,11 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(200, channel[0], "User channel fetched successfully")
     );
-});       //to show subscribers and subscribing users
+}); //to show subscribers and subscribing users
 
 const getWatchHistory = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
   const user = await User.aggregate([
     {
       $match: {

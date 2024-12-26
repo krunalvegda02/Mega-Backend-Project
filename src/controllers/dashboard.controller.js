@@ -5,16 +5,23 @@ import { Like } from "../models/like.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from "../models/user.model.js";
 
 // Get the channel stats like total video views, total subscribers, total videos, total likes etc.
 const getChannelStats = asyncHandler(async (req, res) => {
   const channelId = req.user._id;
 
+  const userdata = await User.findById(channelId);
+  if (!userdata) {
+    throw new ApiError(401, "user not found!");
+  }
+
   const totalSubscribers = await Subscription.countDocuments({
     channel: channelId,
   });
 
-  const totalVideos = await Video.countDocuments({ owner: channelId });
+  const totalVideos = await Video.find({ owner: channelId });
+  // const totalLikes = await Like.find({ owner: channelId });
 
   const totalLikes = await Like.countDocuments({
     video: { $in: (await Video.find({ owner: channelId })).map((v) => v._id) },
@@ -32,6 +39,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
     new ApiResponse(
       200,
       {
+        userdata,
         totalSubscribers,
         totalVideos,
         totalLikes,

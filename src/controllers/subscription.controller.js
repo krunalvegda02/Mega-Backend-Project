@@ -39,8 +39,9 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
 
   // Find all subscriptions where the subscriber matches the subscriberId
-  const subscriptions = await Subscription.find({         //! subscription = we follow anyone
-    subscriber: subscriberId, 
+  const subscriptions = await Subscription.find({
+    //! subscription = we follow anyone
+    subscriber: subscriberId,
   }).populate("channel", "name email");
 
   if (!subscriptions || subscriptions.length === 0) {
@@ -65,7 +66,8 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
   // Find all subscriptions where the channel matches the channelId
   const subscriptions = await Subscription.find({
     channel: channelId,
-  }).populate("subscriber", "name email");
+  }).populate("subscriber", "email");
+  console.log("subscription", subscriptions);
 
   if (!subscriptions || subscriptions.length === 0) {
     return res

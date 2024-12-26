@@ -13,8 +13,8 @@ const createTweet = asyncHandler(async (req, res) => {
   }
 
   const newTweet = new Tweet({
-    content: content, // Content of the tweet from the request body
-    owner: req.user._id, // Owner is the logged-in user, which should be in req.user._id
+    content: content,
+    owner: req.user._id,
   });
 
   // Save the new tweet to the database
@@ -48,7 +48,8 @@ const getUserTweets = asyncHandler(async (req, res) => {
       $project: {
         content: 1, // Select the tweet content
         "ownerDetails.fullName": 1, // Select the full name from the user document
-        "ownerDetails.username": 1, // Select the username from the user document
+        "ownerDetails.username": 1,
+        "ownerDetails.avatar": 1, // Select the username from the user document
       },
     },
   ]);
