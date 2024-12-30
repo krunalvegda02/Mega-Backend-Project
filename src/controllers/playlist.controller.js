@@ -6,6 +6,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const createPlaylist = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
+  console.log("req body", req.body);
+
   if (!name) {
     throw new ApiError(400, "Please Provide a name of Playlist");
   }

@@ -27,6 +27,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
     video: { $in: (await Video.find({ owner: channelId })).map((v) => v._id) },
   });
 
+
+// ! views is array so find that is sum will work here or not cz output is always 0
   const totalViews =
     (
       await Video.aggregate([

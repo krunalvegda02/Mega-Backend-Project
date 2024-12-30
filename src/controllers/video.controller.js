@@ -45,7 +45,28 @@ const getAllVideos = asyncHandler(async (req, res) => {
     .skip(skip)
     .limit(limitNumber);
 
-    // const userDetails = await User.find
+  const userDetails = await Video.aggregate([
+    {
+      $match: { owner: userId },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "userData",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        avatar: 1,
+        username: 1,
+        fullname: 1,
+      },
+    },
+  ]);
+  // const userDetails = await User.find
 
   // Response
   return res.status(200).json(
@@ -56,6 +77,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         page: pageNumber,
         limit: limitNumber,
         videos,
+        userDetails,
       },
       "Videos fetched successfully"
     )
@@ -118,7 +140,7 @@ const getMyVideos = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200,{myVideos} , "My Video Fetched Succesfully"));
+    .json(new ApiResponse(200, { myVideos }, "My Video Fetched Succesfully"));
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
@@ -134,7 +156,9 @@ const getVideoById = asyncHandler(async (req, res) => {
   if (!video) {
     throw new ApiError(400, "Video not found");
   }
-  const user = await User.findById(video.owner).select(" -password -refreshToken");
+  const user = await User.findById(video.owner).select(
+    " -password -refreshToken"
+  );
   // console.log("User", user);
   if (!user) {
     throw new ApiError(400, "user not found");
@@ -152,7 +176,11 @@ const getVideoById = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      new ApiResponse(200, { video, totalViews, user }, "Video Fetched succesfully")
+      new ApiResponse(
+        200,
+        { video, totalViews, user },
+        "Video Fetched succesfully"
+      )
     );
 });
 
@@ -172,7 +200,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Unable to update video");
   }
   //   console.log("video.thumbnail", video.thumbnail);
- let newThumbnailUrl = null;
+  let newThumbnailUrl = null;
   // Deleting old thumbnail if a new one is provided
   if (thumbnail && video.thumbnail) {
     const oldThumbnail = await extractPublicIdFromUrl(video.thumbnail);
@@ -188,9 +216,9 @@ const updateVideo = asyncHandler(async (req, res) => {
     }
   }
 
-  if (title){
+  if (title) {
     video.title = title;
-  } 
+  }
   if (description) {
     video.description = description;
   }
