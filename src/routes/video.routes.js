@@ -6,7 +6,8 @@ import {
   publishAVideo,
   togglePublishStatus,
   updateVideo,
-  getMyVideos
+  getMyVideos,
+  channelVideos,
 } from "../controllers/video.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -38,6 +39,8 @@ router
   .get(getVideoById) // get video for particular clicking on particular video
   .delete(deleteVideo)
   .patch(upload.single("thumbnail"), updateVideo); //we can not update video just title and thumbnail can be updated
+
+router.route("/c/:channelid").get(channelVideos);
 
 router.route("/toggle/publish/:videoId").patch(togglePublishStatus);
 

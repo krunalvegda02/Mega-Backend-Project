@@ -44,35 +44,11 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const getVideoComments = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  const { page = 1, limit = 10 } = req.query;
+  console.log("VIdeois", videoId);
 
-  if (!mongoose.isValidObjectId(videoId)) {
-    throw new ApiError(400, "Invalid video ID");
-  }
+  // const videoObjectId = new mongoose.Types.ObjectId(videoId);
+  const comments = await Comment.find({ video: videoId }).populate("owner", "username avatar");
 
-  const videoObjectId = new mongoose.Types.ObjectId(videoId);
-  // Paginate and fetch comments for the video
-  const comments = await Comment.aggregate([
-    { $match: { video: videoObjectId } },
-    {
-      $lookup: {
-        from: "users", // Join with the User collection
-        localField: "owner",
-        foreignField: "_id",
-        as: "ownerDetails",
-      },
-    },
-    { $unwind: "$ownerDetails" }, // Flatten the owner details
-    {
-      $project: {
-        content: 1,
-        "ownerDetails.username": 1,
-        "ownerDetails.avatar": 1,
-      },
-    },
-  ])
-    .skip((page - 1) * limit) // Skip for pagination
-    .limit(parseInt(limit)); // Limit results per page
 
   const totalComments = await Comment.countDocuments({ video: videoId });
 
@@ -82,8 +58,6 @@ const getVideoComments = asyncHandler(async (req, res) => {
       {
         comments,
         total: totalComments,
-        page: parseInt(page),
-        limit: parseInt(limit),
       },
       "All video comments fetched successfully"
     )
@@ -126,8 +100,8 @@ const updateComment = asyncHandler(async (req, res) => {
   }
 
   return res
-    .status(201)
-    .json(new ApiResponse(201, updatedComment, "Comment updated successfully"));
+    .status(200)
+    .json(new ApiResponse(200, updatedComment, "Comment updated successfully"));
 });
 
 const deleteComment = asyncHandler(async (req, res) => {

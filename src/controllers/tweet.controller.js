@@ -49,7 +49,8 @@ const getUserTweets = asyncHandler(async (req, res) => {
         content: 1, // Select the tweet content
         "ownerDetails.fullName": 1, // Select the full name from the user document
         "ownerDetails.username": 1,
-        "ownerDetails.avatar": 1, // Select the username from the user document
+        "ownerDetails.avatar": 1,
+        createdAt : 1 // Select the username from the user document
       },
     },
   ]);

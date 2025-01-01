@@ -12,7 +12,7 @@ app.use(
 );
 //middleware required for "req.body" sending json data to server
 app.use(express.json({ limit: "20kb" }));
-app.use(express.urlencoded({ extented: true, limit: "20kb" }));
+// app.use(express.urlencoded({ extented: true, limit: "20kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 

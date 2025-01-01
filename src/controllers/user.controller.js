@@ -386,13 +386,13 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     },
     {
       $project: {
+        coverImage: 1,
         fullname: 1,
         username: 1,
         subscriberCount: 1,
         channelsSubscribedToCount: 1,
         isSubscribed: 1,
         avatar: 1,
-        coverImage: 1,
       },
     },
   ]);
@@ -467,6 +467,22 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     );
 });
 
+const SearchUser = asyncHandler(async (req, res) => {
+  const { username } = req.body;
+  if (!username) {
+    return ApiError(401, "Please provide a username to search");
+  }
+
+  const searchedUser = await User.find({ username: username });
+  if (!searchedUser) {
+    return ApiError(401, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, searchedUser, "User Found Succesfully"));
+});
+
 export {
   registerUser,
   loginUser,
@@ -479,4 +495,5 @@ export {
   userCoverImageUpdate,
   getUserChannelProfile,
   getWatchHistory,
+  SearchUser
 };

@@ -40,34 +40,36 @@ const getAllVideos = asyncHandler(async (req, res) => {
   // Fetching videos
   const totalVideos = await Video.countDocuments(filters);
   // Total number of matching videos
-  const videos = await Video.find(filters)
-    .sort(sortOptions)
-    .skip(skip)
-    .limit(limitNumber);
-
-  const userDetails = await Video.aggregate([
-    {
-      $match: { owner: userId },
-    },
+  // Fetching videos with userDetails using aggregation
+  const videosWithUserDetails = await Video.aggregate([
+    { $match: filters },
+    { $sort: sortOptions },
+    { $skip: skip },
+    { $limit: limitNumber },
     {
       $lookup: {
-        from: "users",
-        localField: "owner",
-        foreignField: "_id",
-        as: "userData",
+        from: "users", // Name of the user collection
+        localField: "owner", // Field in Video collection
+        foreignField: "_id", // Field in User collection
+        as: "userDetails", // Alias for the joined data
       },
+    },
+    {
+      $unwind: "$userDetails", // Flatten the userDetails array
     },
     {
       $project: {
         _id: 1,
-        avatar: 1,
-        username: 1,
-        fullname: 1,
+        title: 1,
+        description: 1,
+        thumbnail: 1,
+        views: 1,
+        createdAt: 1,
+        "userDetails.avatar": 1, // Include specific user fields
+        "userDetails.username": 1,
       },
     },
   ]);
-  // const userDetails = await User.find
-
   // Response
   return res.status(200).json(
     new ApiResponse(
@@ -76,8 +78,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         total: totalVideos,
         page: pageNumber,
         limit: limitNumber,
-        videos,
-        userDetails,
+        videos: videosWithUserDetails,
       },
       "Videos fetched successfully"
     )
@@ -128,14 +129,87 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 const getMyVideos = asyncHandler(async (req, res) => {
   const userid = req.user._id;
-  console.log(userid);
 
-  const myVideos = await Video.find({ owner: userid });
-  console.log(myVideos);
+  const myVideos = await Video.aggregate([
+    {
+      $match: {
+        owner: userid,
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "userDetails",
+      },
+    },
+    {
+      $unwind: "$userDetails",
+    },
+    {
+      $project: {
+        _id: 1,
+        title: 1,
+        description: 1,
+        thumbnail: 1,
+        views: 1,
+        createdAt: 1,
+        "userDetails.avatar": 1,
+        "userDetails.username": 1,
+      },
+    },
+  ]);
   if (!myVideos) {
     return res
       .status(200)
       .json(new ApiResponse(200, "User Does Not Publish any Video"));
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { myVideos }, "My Video Fetched Succesfully"));
+});
+
+const channelVideos = asyncHandler(async (req, res) => {
+  const {channelid} = req.params;
+  console.log("channelid", channelid);
+
+  const myVideos = await Video.find({ owner: channelid }).populate("owner", "username avatar");
+  // .aggregate([
+  //   {
+  //     $match: {
+  //       owner: channelid,
+  //     },
+  //   },
+  //   {
+  //     $lookup: {
+  //       from: "users",
+  //       localField: "owner",
+  //       foreignField: "_id",
+  //       as: "userDetails",
+  //     },
+  //   },
+  //   {
+  //     $unwind: "$userDetails",
+  //   },
+  //   {
+  //     $project: {
+  //       _id: 1,
+  //       title: 1,
+  //       description: 1,
+  //       thumbnail: 1,
+  //       views: 1,
+  //       createdAt: 1,
+  //       "userDetails.avatar": 1,
+  //       "userDetails.username": 1,
+  //     },
+  //   },
+  // ]);
+  if (!myVideos) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Channel Does Not Publish any Video"));
   }
 
   return res
@@ -302,4 +376,5 @@ export {
   deleteVideo,
   togglePublishStatus,
   getMyVideos,
+  channelVideos,
 };
