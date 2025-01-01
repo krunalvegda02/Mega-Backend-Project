@@ -125,9 +125,9 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     },
     {
       $lookup: {
-        from: "videos", 
-        localField: "video", 
-        foreignField: "_id", 
+        from: "videos",
+        localField: "video",
+        foreignField: "_id",
         as: "videoDetails",
       },
     },
@@ -136,16 +136,14 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     },
     {
       $project: {
-        _id: 0,                 // Exclude the _id of the Like document
+        _id: 0, // Exclude the _id of the Like document
         video: "$videoDetails", // Include the video details from the lookup
       },
     },
   ]);
 
   if (!likedVideos || likedVideos.length === 0) {
-    return res
-      .status(404)
-      .json(new ApiResponse(404, "No liked videos found"));
+    return res.status(404).json(new ApiResponse(404, "No liked videos found"));
   }
 
   return res
@@ -153,4 +151,54 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, likedVideos, "Liked Videos fetched"));
 });
 
-export { toggleCommentLike, toggleTweetLike, toggleVideoLike, getLikedVideos };
+const getVideoLikes = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+
+  const likedVideos = await Like.find({ video: videoId });
+  const likes = likedVideos.likedBy;
+
+  const likedBy = likedVideos.length > 0 ? likedVideos[0].likedBy : [];
+  const likesCount = likedBy.length;
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, likesCount, "likes Fetched Succesfully"));
+});
+
+const getCommentLikes = asyncHandler(async (req, res) => {
+  const { commentId } = req.params;
+
+  const likedComments = await Like.find({ comment: commentId });
+  const likes = likedComments.likedBy;
+
+  const likedBy = likedComments.length > 0 ? likedComments[0].likedBy : [];
+  const likesCount = likedBy.length;
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, likesCount, "likes Fetched Succesfully"));
+});
+
+const getTweetLikes = asyncHandler(async (req, res) => {
+  const { tweetId } = req.params;
+
+  const likedTweets = await Like.find({ tweet: tweetId });
+  const likes = likedTweets.likedBy;
+
+  const likedBy = likedTweets.length > 0 ? likedTweets[0].likedBy : [];
+  const likesCount = likedBy.length;
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, likesCount, "likes Fetched Succesfully"));
+});
+
+export {
+  toggleCommentLike,
+  toggleTweetLike,
+  toggleVideoLike,
+  getLikedVideos,
+  getVideoLikes,
+  getCommentLikes,
+  getTweetLikes
+};

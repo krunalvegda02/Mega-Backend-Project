@@ -172,10 +172,13 @@ const getMyVideos = asyncHandler(async (req, res) => {
 });
 
 const channelVideos = asyncHandler(async (req, res) => {
-  const {channelid} = req.params;
+  const { channelid } = req.params;
   console.log("channelid", channelid);
 
-  const myVideos = await Video.find({ owner: channelid }).populate("owner", "username avatar");
+  const myVideos = await Video.find({ owner: channelid }).populate(
+    "owner",
+    "username avatar"
+  );
   // .aggregate([
   //   {
   //     $match: {
@@ -218,41 +221,50 @@ const channelVideos = asyncHandler(async (req, res) => {
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
-  const userid = req.user._id;
-  // console.log(userid);
-
+  const userId = req.user._id;
   const { videoId } = req.params;
-  if (!videoId) {
-    throw new ApiError(404, "video not found");
-  }
 
   const video = await Video.findById(videoId);
   if (!video) {
     throw new ApiError(400, "Video not found");
   }
+
   const user = await User.findById(video.owner).select(
     " -password -refreshToken"
   );
-  // console.log("User", user);
-  if (!user) {
-    throw new ApiError(400, "user not found");
-  }
+  console.log("User", user);
 
-  const hasViewed = userid && video.views.includes(userid);
-  if (!hasViewed && userid) {
-    video.views.push(userid); // Add user ID to the views array
-    await video.save(); // Save changes to the database
-  }
+  // const hasViewed = userId && video.views.includes(userId);
+  // if (!hasViewed) {
+  //   user.watchHistory.push(videoId);
+  //   video.views.push(userId); // Add user ID to the views array
+  //   await video.save(); // Save changes to the database
+  //   await user.save();
+  // }
+
+  // Add videoId to watchHistory if it doesn't already exist
+  const addVideoToHistory = await User.findByIdAndUpdate(
+    userId,
+    { $addToSet: { watchHistory: videoId } }, //add to set for Avoid duplicates
+    { new: true }
+  );
+
+  // Add userId to video views if not already present
+  const videoUpdate = await Video.findByIdAndUpdate(
+    videoId,
+    { $addToSet: { views: userId } },
+    { new: true }
+  );
 
   // Total views = number of unique users who watched the video
-  const totalViews = video.views.length;
+  const totalViews = videoUpdate.views.length;
 
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        { video, totalViews, user },
+        { video: videoUpdate, totalViews, user },
         "Video Fetched succesfully"
       )
     );

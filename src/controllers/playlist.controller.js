@@ -104,11 +104,13 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 
 const deletePlaylist = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
+  console.log("playlistid",playlistId);
+  
   if (!playlistId) {
     throw new ApiError(400, "Playlist not Found");
   }
 
-  const deletedPlaylist = await Playlist.videos.findByIdAndDelete(playlistId);
+  const deletedPlaylist = await Playlist.findByIdAndDelete(playlistId);
   if (!deletedPlaylist) {
     throw new ApiError(404, "Playlist not found");
   }

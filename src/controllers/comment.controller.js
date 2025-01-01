@@ -48,8 +48,6 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
   // const videoObjectId = new mongoose.Types.ObjectId(videoId);
   const comments = await Comment.find({ video: videoId }).populate("owner", "username avatar");
-
-
   const totalComments = await Comment.countDocuments({ video: videoId });
 
   return res.status(200).json(

@@ -36,19 +36,14 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 
 // controller to return subscriber list of a channel     //!Follower List
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
-  const { subscriberId } = req.params;
+  const { channelId } = req.params;
+  console.log("subscriberId", channelId);
 
   // Find all subscriptions where the subscriber matches the subscriberId
   const subscriptions = await Subscription.find({
     //! subscription = we follow anyone
-    subscriber: subscriberId,
-  }).populate("channel", "name email");
-
-  if (!subscriptions || subscriptions.length === 0) {
-    return res
-      .status(404)
-      .json(new ApiResponse(404, [], "No subscribed channels found"));
-  }
+    channel : channelId,
+  }).populate("channel", "fullname username");
 
   // Return all the channels to which this user is subscribed
   const channels = subscriptions.map((sub) => sub.channel);
@@ -65,15 +60,9 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
 
   // Find all subscriptions where the channel matches the channelId
   const subscriptions = await Subscription.find({
-    channel: channelId,
-  }).populate("subscriber", "email");
-  console.log("subscription", subscriptions);
-
-  if (!subscriptions || subscriptions.length === 0) {
-    return res
-      .status(404)
-      .json(new ApiResponse(404, [], "No subscribers found for this channel"));
-  }
+    subscriber: channelId,
+  }).populate("subscriber", "username");
+  // console.log("subscription", subscriptions);
 
   // Return all the subscribers
   const subscribers = subscriptions.map((sub) => sub.subscriber);

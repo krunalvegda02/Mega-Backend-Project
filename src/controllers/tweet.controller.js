@@ -27,33 +27,35 @@ const createTweet = asyncHandler(async (req, res) => {
 
 const getUserTweets = asyncHandler(async (req, res) => {
   // TODO: get user tweets
-  const user = req.user._id;
+  const  {userId}  = req.params;
+  console.log("user", userId);
 
-  const userTweets = await Tweet.aggregate([
-    {
-      $match: { owner: user },
-    },
-    {
-      $lookup: {
-        from: "users",
-        localField: "owner",
-        foreignField: "_id",
-        as: "ownerDetails",
-      },
-    },
-    {
-      $unwind: "$ownerDetails", // If you want to flatten the resulting array
-    },
-    {
-      $project: {
-        content: 1, // Select the tweet content
-        "ownerDetails.fullName": 1, // Select the full name from the user document
-        "ownerDetails.username": 1,
-        "ownerDetails.avatar": 1,
-        createdAt : 1 // Select the username from the user document
-      },
-    },
-  ]);
+  const userTweets = await Tweet.find({ owner: userId }).populate("owner", "avatar username fullname");
+  // .aggregate([
+  //   {
+  //     $match: { owner: user },
+  //   },
+  //   {
+  //     $lookup: {
+  //       from: "users",
+  //       localField: "owner",
+  //       foreignField: "_id",
+  //       as: "ownerDetails",
+  //     },
+  //   },
+  //   {
+  //     $unwind: "$ownerDetails", // If you want to flatten the resulting array
+  //   },
+  //   {
+  //     $project: {
+  //       content: 1, // Select the tweet content
+  //       "ownerDetails.fullName": 1, // Select the full name from the user document
+  //       "ownerDetails.username": 1,
+  //       "ownerDetails.avatar": 1,
+  //       createdAt: 1, // Select the username from the user document
+  //     },
+  //   },
+  // ]);
 
   return res
     .status(200)
