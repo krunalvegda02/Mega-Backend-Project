@@ -468,14 +468,14 @@ const getWatchHistory = asyncHandler(async (req, res) => {
 });
 
 const SearchUser = asyncHandler(async (req, res) => {
-  const { username } = req.body;
+  const { username } = req.params;
   if (!username) {
-    return ApiError(401, "Please provide a username to search");
+    throw new ApiError(401, "Please provide a username to search");
   }
 
-  const searchedUser = await User.find({ username: username });
+  const searchedUser = await User.findOne({ username: username });
   if (!searchedUser) {
-    return ApiError(401, "User not found");
+    throw ApiError(401, "User not found");
   }
 
   return res

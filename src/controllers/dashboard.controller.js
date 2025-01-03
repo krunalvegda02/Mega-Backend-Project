@@ -23,19 +23,31 @@ const getChannelStats = asyncHandler(async (req, res) => {
   const totalVideos = await Video.find({ owner: channelId });
   // const totalLikes = await Like.find({ owner: channelId });
 
-  const totalLikes = await Like.countDocuments({
-    video: { $in: (await Video.find({ owner: channelId })).map((v) => v._id) },
-  });
+  const totalLikes = await Like.aggregate([
+    {
+      $match: {
+        video: {
+          $in: (await Video.find({ owner: channelId }).select("_id")) // Fetch only the _id field
+            .map((video) => video._id), // Extract the _id values into an array
+        },
+      },
+    },
+    {
+      $unwind : "$likedBy"
+    },
+    {
+      $count  : "totalLikes"
+    }
+  ]);
 
+  // video:
 
-// ! views is array so find that is sum will work here or not cz output is always 0
-  const totalViews =
-    (
-      await Video.aggregate([
-        { $match: { owner: channelId } },
-        { $group: { _id: null, totalViews: { $sum: "$views" } } },
-      ])
-    )[0]?.totalViews || 0;
+  // ! views is array so find that is sum will work here or not cz output is always 0
+  const totalViews = await Video.aggregate([
+    { $match: { owner: channelId } },
+    { $unwind: "$views" },
+    { $count: "totalViews" },
+  ]);
 
   return res.status(200).json(
     new ApiResponse(
