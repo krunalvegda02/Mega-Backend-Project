@@ -33,11 +33,11 @@ const getChannelStats = asyncHandler(async (req, res) => {
       },
     },
     {
-      $unwind : "$likedBy"
+      $unwind: "$likedBy",
     },
     {
-      $count  : "totalLikes"
-    }
+      $count: "totalLikes",
+    },
   ]);
 
   // video:
@@ -66,12 +66,36 @@ const getChannelStats = asyncHandler(async (req, res) => {
 
 const getChannelVideos = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  console.log("Fetching videos for user: ", userId);
-  const videos = await Video.find({ owner: userId }).limit(10);
-  if (!videos || videos.length === 0) {
-    throw new ApiError(400, "Channel does not publish any video");
-  }
-  console.log(videos);
+  // console.log("Fetching videos for user: ", userId);
+
+  const videos = await Video.aggregate([
+    {
+      $match: { owner: userId },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "video",
+        as: "likes",
+      },
+    },
+    { $unwind: { path: "$likes", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        title: 1,
+        // description: 1,
+        // video: 1,
+        thumbnail: 1,
+        // views: 1,
+        isPublished: 1,
+        createdAt: 1,
+        // updatedAt: 1,
+        likes: { $size: { $ifNull: ["$likes.likedBy", []] } },
+      },
+    },
+  ]);
+
   return res
     .status(200)
     .json(new ApiResponse(200, videos, "All channel videos"));
